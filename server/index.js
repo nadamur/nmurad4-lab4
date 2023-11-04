@@ -3,6 +3,7 @@ const app = express();
 const port = 3000;
 const superheroesInfo = require('C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_info.json');
 const superheroesPowers = require('C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_powers.json');
+const fs = require('fs');
 
 //required functions
 //function takes a pattern, returns a set number of hero ids that match given pattern
@@ -26,7 +27,6 @@ app.use(express.json());
 app.get('/api/superheroes/:id', (req, res) => {
     const superheroId = parseInt(req.params.id);
     const superhero = superheroesInfo.find((hero) => hero.id === superheroId);
-    console.log('id')
   
     if (!superhero) {
       return res.status(404).json({ error: 'Superhero not found' });
@@ -40,7 +40,6 @@ app.get('/api/superheroes/:id/power', (req, res) => {
     const superheroId = parseInt(req.params.id);
     const superhero = superheroesInfo.find((hero) => hero.id === superheroId);
     const superheroPower = superheroesPowers.find((hero) => hero.hero_names === superhero.name);
-    console.log('power')
   
     if (!superhero) {
       return res.status(404).json({ error: 'Superhero not found' });
@@ -58,7 +57,7 @@ app.get('/api/superheroes/:id/power', (req, res) => {
 //this method will return all publisher names
 app.get('/api/publishers', (req, res) => {
     const publishers = superheroesInfo.map(hero => hero.Publisher);
-    console.log(publishers);
+
   
     res.json(publishers);
 });
@@ -92,6 +91,49 @@ app.get('/api/:pattern/:field/:n', (req, res) => {
             }
             break;
     }
+});
+
+//this method will create a list with a list name and returns an error if the name already exists
+app.get('/api/lists/:listName', (req, res) => {
+    const listName = req.params.listName;
+    const filePath = 'C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_lists.json';
+    fs.readFile(filePath, 'utf-8', (err, data) => {
+        if (err) {
+          console.error('Error reading JSON file:', err);
+          return;
+        }
+        if (data){
+            if (jsonData.hasOwnProperty(listName)){
+                res.status(404).json({ error: 'List name already exists' });
+            } else{
+            const jsonData = JSON.parse(data);
+            const newListName = listName;
+            const newSuperheroIds = [];
+            jsonData[newListName] = newSuperheroIds;
+      
+            const jsonString = JSON.stringify(jsonData, null, 2);
+      
+            fs.writeFile(filePath, jsonString, 'utf-8', (writeErr) => {
+            if (writeErr) {
+                console.error('Error writing JSON file:', writeErr);
+            } else {
+                console.log('JSON data has been updated and written to', filePath);
+            }
+            });}
+            
+        }else{
+            const initialData = { [listName]: [] };
+            
+            fs.writeFile(filePath, JSON.stringify(initialData, null, 2), 'utf-8', (writeErr) => {
+                if (writeErr) {
+                    console.error('Error writing JSON file:', writeErr);
+                } else {
+                    console.log('JSON data has been updated and written to', filePath);
+                }
+                });
+        }
+        
+      });
 });
 
 
