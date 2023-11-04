@@ -4,6 +4,21 @@ const port = 3000;
 const superheroesInfo = require('C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_info.json');
 const superheroesPowers = require('C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_powers.json');
 
+//required functions
+//function takes a pattern, returns a set number of hero ids that match given pattern
+function getHeroIds(n, pattern, field, res){
+    const superheroes = superheroesInfo.filter((hero) => hero[pattern].toLowerCase().includes(field.toLowerCase()));
+    const ids = superheroes.map(hero => hero.id);
+
+    if (ids.length > 0) {
+        const limitedIds = ids.slice(0, n);
+        res.json({ ids: limitedIds });
+    } else {
+    res.status(404).json({ error: 'No heroes found' });
+    }
+}
+
+
 
 app.use(express.json());
 
@@ -56,37 +71,13 @@ app.get('/api/:pattern/:field/:n', (req, res) => {
     //pattern can either be name, race, publisher or power
     switch (pattern){
         case 'name':
-            const superheroesNames = superheroesInfo.filter((hero) => hero.name.includes(field));
-            const nameIds = superheroesNames.map(hero => hero.id);
-
-            if (nameIds.length > 0) {
-                const limitedNameIds = nameIds.slice(0, n);
-                res.json({ nameIds: limitedNameIds });
-            } else {
-                res.status(404).json({ error: 'No heroes found for this name' });
-            }
+            getHeroIds(n,'name',field, res);
             break;
         case 'race':
-            const superheroesRace = superheroesInfo.filter((hero) => hero.Race.toLowerCase() === field.toLowerCase());
-            const raceIds = superheroesRace.map(hero => hero.id);
-
-            if (raceIds.length > 0) {
-                const limitedRaceIds = raceIds.slice(0, n);
-                res.json({ raceIds: limitedRaceIds });
-            } else {
-            res.status(404).json({ error: 'No heroes found for this race' });
-            }
+            getHeroIds(n,'Race',field, res);
             break;
         case 'publisher':
-            const superheroesPublishers = superheroesInfo.filter((hero) => hero.Publisher.includes(field));
-            const publisherIds = superheroesPublishers.map(hero => hero.id);
-
-            if (publisherIds.length > 0) {
-                const limitedPublisherIds = publisherIds.slice(0, n);
-                res.json({ publisherIds: limitedPublisherIds });
-            } else {
-            res.status(404).json({ error: 'No heroes found for this publisher' });
-            }
+            getHeroIds(n,'Publisher',field, res);
             break;
         case 'power':
             const superheroPowers = superheroesInfo.filter((hero) => hero.Power.includes(field));
@@ -102,6 +93,7 @@ app.get('/api/:pattern/:field/:n', (req, res) => {
             break;
     }
 });
+
 
 
 app.listen(port, () => {
