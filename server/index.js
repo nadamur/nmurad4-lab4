@@ -1,9 +1,14 @@
 const express = require('express');
 const app = express();
 const port = 3000;
+const path = require('path');
 const superheroesInfo = require('C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_info.json');
 const superheroesPowers = require('C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_powers.json');
 const fs = require('fs');
+const mainDir = path.join(__dirname, '../');
+const clientDir = path.join(__dirname, '../client');
+app.use(express.static(mainDir));
+app.use(express.static(clientDir));
 
 //required functions
 //function takes a pattern, returns a set number of hero ids that match given pattern
@@ -265,6 +270,9 @@ app.get('/api/lists/info/:listName', (req, res) => {
       }); 
 });
 
+app.get('/', (req, res) => {
+    res.sendFile('index.html', { root: clientDir });
+});
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);

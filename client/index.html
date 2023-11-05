@@ -8,14 +8,22 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Superhero Search</h1>
 
     <!-- Search Form -->
     <div id="search">
-        <input type="text" id="searchInput" placeholder="Search by name, race, publisher, or power">
-        <button id="searchButton">Search</button>
+        <h2>Search Superheroes</h2>
+        <form id="searchForm">
+            <label for="searchInput">Search by:</label>
+            <select id="searchCategory">
+                <option value="name">Name</option>
+                <option value="race">Race</option>
+                <option value="publisher">Publisher</option>
+                <option value="power">Power</option>
+            </select>
+            <input type="text" id="searchInput" placeholder="Search . . .">
+            <button type="submit" id="searchButton">Search</button>
+        </form>
     </div>
-
     <!-- Display Search Results -->
     <div id="searchResults">
         <!-- Results will be displayed here -->
@@ -50,5 +58,6 @@
     </div>
 
     <script src="script.js"></script>
+    <script src="../server/index.js"></script>
 </body>
 </html>
