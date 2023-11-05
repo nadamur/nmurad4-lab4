@@ -144,9 +144,7 @@ app.put('/api/lists/:listNameAndIds', (req, res) => {
     const listName = req.params.listNameAndIds;
     //assuming we are receiving the URL in the format: /api/lists/myList?ids=1,2,3
     const ids = req.query.ids;
-    console.log(ids);
     idArray = ids.split(',');
-    console.log(idArray);
     const filePath = 'C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_lists.json';
     fs.readFile(filePath, 'utf-8', (err, data) => {
         if (err) {
@@ -173,7 +171,28 @@ app.put('/api/lists/:listNameAndIds', (req, res) => {
       });
 });
 
-
+//get list of superhero IDs for given list name
+app.get('/api/lists/:listName', (req, res) => {
+    const listName = req.params.listName;
+    const filePath = 'C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_lists.json';
+    fs.readFile(filePath, 'utf-8', (err, data) => {
+        if (err) {
+          console.error('Error reading JSON file:', err);
+          res.status(500).json({ error: 'Internal server error' });
+        }
+        const jsonData = JSON.parse(data);
+        //if the name does exist, update the IDs
+        idArray = jsonData[listName];
+        if(idArray){
+            res.json({idArray});
+        }else{
+            //if it doesnt exist, send an error
+            console.log(idArray);
+            console.log(listName);
+            res.status(404).json({ error: 'List name does not exist' });
+        }     
+      }); 
+});
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
