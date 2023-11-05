@@ -42,6 +42,7 @@ app.use(express.json());
 
 //this method will return all the hero info depending on id
 app.get('/api/superheroes/:id', (req, res) => {
+    console.log("get hero info by id")
     const superheroId = parseInt(req.params.id);
     const superhero = getHeroInfo(superheroId);
   
@@ -71,13 +72,12 @@ app.get('/api/superheroes/:id/power', (req, res) => {
 //this method will return all publisher names
 app.get('/api/publishers', (req, res) => {
     const publishers = superheroesInfo.map(hero => hero.Publisher);
-
-  
     res.json(publishers);
 });
 
 //this method will return n number of search results (hero ids) for given search pattern
 app.get('/api/search/:pattern/:field/:n', (req, res) => {
+    console.log("search by pattern");
     const n = parseInt(req.params.n);
     const pattern = req.params.pattern;
     const field = req.params.field;
@@ -93,13 +93,20 @@ app.get('/api/search/:pattern/:field/:n', (req, res) => {
             getHeroIds(n,'Publisher',field, res);
             break;
         case 'power':
-            const superheroPowers = superheroesInfo.filter((hero) => hero.Power.includes(field));
-            const powers = Object.keys(superheroPowers).filter(power => superheroPowers[power] === 'True');
-            const powersId = powers.map(hero => hero.id);
-
-            if (powersId.length > 0) {
-                const limitedPublisherIds = publisherIds.slice(0, n);
-                res.json({ publisherIds: limitedPublisherIds });
+            const heroes = superheroesPowers.filter((hero) => hero[field] === 'True');
+            console.log("heroes" + heroes);
+            const names = heroes.map((hero) => hero.hero_names);
+            console.log("names " + names);
+            ids = [];
+            for (const n of names){
+                const hero = superheroesInfo.find((hero) => hero.name.toLowerCase() === n.toLowerCase());
+                if (hero){
+                    ids.push(hero.id);
+                }
+            }
+            if (ids.length > 0) {
+                const limitedIds = ids.slice(0, n);
+                res.json({ ids: limitedIds });
             } else {
             res.status(404).json({ error: 'No heroes found for this publisher' });
             }
