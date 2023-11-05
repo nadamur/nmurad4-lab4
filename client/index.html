@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superhero App</title>
+    <!-- Include any CSS stylesheets for your UI -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Superhero Search</h1>
+
+    <!-- Search Form -->
+    <div id="search">
+        <input type="text" id="searchInput" placeholder="Search by name, race, publisher, or power">
+        <button id="searchButton">Search</button>
+    </div>
+
+    <!-- Display Search Results -->
+    <div id="searchResults">
+        <!-- Results will be displayed here -->
+    </div>
+
+    <!-- Favourite Lists -->
+    <h2>Favourite Lists</h2>
+    <ul id="favouriteLists">
+        <!-- Favourite lists will be displayed here -->
+    </ul>
+
+    <!-- Display Superheroes in a List -->
+    <div id="listDetails">
+        <h2>List Name: <span id="listName">Selected List</span></h2>
+        <button id="sortByName">Sort by Name</button>
+        <button id="sortByRace">Sort by Race</button>
+        <button id="sortByPublisher">Sort by Publisher</button>
+        <button id="sortByPower">Sort by Power</button>
+        <table id="listSuperheroes">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Race</th>
+                    <th>Publisher</th>
+                    <th>Power</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Superheroes in the selected list will be displayed here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
