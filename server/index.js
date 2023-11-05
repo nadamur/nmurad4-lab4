@@ -18,7 +18,19 @@ function getHeroIds(n, pattern, field, res){
     res.status(404).json({ error: 'No heroes found' });
     }
 }
-
+//function takes hero id and returns all hero info
+function getHeroInfo(id){
+    const superhero = superheroesInfo.find((hero) => hero.id === id);
+    return superhero;
+}
+//function takes hero id and returns all powers
+function getHeroPower(id){
+    const superhero = superheroesInfo.find((hero) => hero.id === id);
+    console.log(superhero);
+    const superheroPower = superheroesPowers.find((hero) => hero.hero_names.toLowerCase() === superhero.name.toLowerCase());
+    const powers = Object.keys(superheroPower).filter(power => superheroPower[power] === 'True');
+    return powers;
+}
 
 
 app.use(express.json());
@@ -26,7 +38,7 @@ app.use(express.json());
 //this method will return all the hero info depending on id
 app.get('/api/superheroes/:id', (req, res) => {
     const superheroId = parseInt(req.params.id);
-    const superhero = superheroesInfo.find((hero) => hero.id === superheroId);
+    const superhero = getHeroInfo(superheroId);
   
     if (!superhero) {
       return res.status(404).json({ error: 'Superhero not found' });
@@ -38,15 +50,12 @@ app.get('/api/superheroes/:id', (req, res) => {
 //this method will return the powers of hero based on id
 app.get('/api/superheroes/:id/power', (req, res) => {
     const superheroId = parseInt(req.params.id);
-    const superhero = superheroesInfo.find((hero) => hero.id === superheroId);
-    const superheroPower = superheroesPowers.find((hero) => hero.hero_names === superhero.name);
-  
+    const superhero = getHeroInfo(superheroId);
+    
     if (!superhero) {
       return res.status(404).json({ error: 'Superhero not found' });
     }
-
-    const powers = Object.keys(superheroPower).filter(power => superheroPower[power] === 'True');
-
+    const powers = getHeroPower(superheroId);
     if (powers.length > 0) {
       res.json({ powers });
     } else {
@@ -63,7 +72,7 @@ app.get('/api/publishers', (req, res) => {
 });
 
 //this method will return n number of search results (hero ids) for given search pattern
-app.get('/api/:pattern/:field/:n', (req, res) => {
+app.get('/api/search/:pattern/:field/:n', (req, res) => {
     const n = parseInt(req.params.n);
     const pattern = req.params.pattern;
     const field = req.params.field;
@@ -140,7 +149,7 @@ app.post('/api/lists/:listName', (req, res) => {
       });
 });
 //save list of superhero IDs to a given list name
-app.put('/api/lists/:listNameAndIds', (req, res) => {
+app.put('/api/lists/add/:listNameAndIds', (req, res) => {
     const listName = req.params.listNameAndIds;
     //assuming we are receiving the URL in the format: /api/lists/myList?ids=1,2,3
     const ids = req.query.ids;
@@ -193,6 +202,69 @@ app.get('/api/lists/:listName', (req, res) => {
         }     
       }); 
 });
+
+//delete list with given name
+app.put('/api/lists/delete/:listName', (req, res) => {
+    const listName = req.params.listName;
+    const filePath = 'C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_lists.json';
+    fs.readFile(filePath, 'utf-8', (err, data) => {
+        if (err) {
+          console.error('Error reading JSON file:', err);
+          res.status(500).json({ error: 'Internal server error' });
+        }
+        const jsonData = JSON.parse(data);
+        //if the name does exist, delete it
+        if (jsonData.hasOwnProperty(listName)){
+            delete jsonData[listName];
+            const jsonString = JSON.stringify(jsonData, null, 2);
+            fs.writeFile(filePath, jsonString, 'utf-8', (writeErr) => {
+            if (writeErr) {
+                console.error('Error writing JSON file:', writeErr);
+                res.status(500).json({ error: 'Internal server error' });
+            } else {
+                res.sendStatus(200);
+            }
+            });
+        }else{
+            //if it doesnt exist, send an error
+            res.status(404).json({ error: 'List name does not exist' });
+        }        
+      });
+});
+
+//get list of names, info and powers of all superheroes in list
+app.get('/api/lists/info/:listName', (req, res) => {
+    const listName = req.params.listName;
+    const filePath = 'C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_lists.json';
+    fs.readFile(filePath, 'utf-8', (err, data) => {
+        if (err) {
+          console.error('Error reading JSON file:', err);
+          res.status(500).json({ error: 'Internal server error' });
+        }
+        const jsonData = JSON.parse(data);
+        //if the name does exist, update the IDs
+        idArray = jsonData[listName];
+        console.log(idArray);
+        if(idArray){
+            heroList = [];
+            for (const i of idArray){
+                const info = getHeroInfo(parseInt(i));
+                console.log(i);
+                const powers = getHeroPower(parseInt(i));
+                const heroWithPowers = {
+                    ...info,
+                    powers: powers,
+                };
+                heroList.push(heroWithPowers);
+            }
+            res.json({heroList});
+        }else{
+            //if it doesnt exist, send an error
+            res.status(404).json({ error: 'List name does not exist' });
+        }     
+      }); 
+});
+
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
