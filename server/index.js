@@ -2,9 +2,9 @@ const express = require('express');
 const app = express();
 const port = 3000;
 const path = require('path');
+const fs = require('fs');
 const superheroesInfo = require('C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_info.json');
 const superheroesPowers = require('C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_powers.json');
-const fs = require('fs');
 const mainDir = path.join(__dirname, '../');
 const clientDir = path.join(__dirname, '../client');
 app.use(express.static(mainDir));
@@ -37,8 +37,33 @@ function getHeroPower(id){
     return powers;
 }
 
-
 app.use(express.json());
+
+//returns all fav list names
+app.get('/api/lists/names', (req, res) => {
+    const filePath = 'C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_lists.json';
+    fs.readFile(filePath, 'utf-8', (err, data) => {
+      if (err) {
+        console.error('Error reading JSON file:', err);
+        res.status(500).json({ error: 'Internal server error' });
+        return;
+      }
+  
+      try {
+        const jsonData = JSON.parse(data);
+        const listNames = Object.keys(jsonData);
+  
+        if (listNames.length > 0) {
+          res.json({ listNames });
+        } else {
+          res.status(404).json({ error: 'No lists found' });
+        }
+      } catch (parseError) {
+        console.error('Error parsing JSON data:', parseError);
+        res.status(500).json({ error: 'Error parsing JSON data' });
+      }
+    });
+  });
 
 //this method will return all the hero info depending on id
 app.get('/api/superheroes/:id', (req, res) => {

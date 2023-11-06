@@ -9,28 +9,41 @@
 </head>
 <body>
 
-    <!-- Search Form -->
-    <div id="search">
-        <h2>Search Superheroes</h2>
-        <form id="searchForm">
-            <label for="searchInput">Search by:</label>
-            <select id="searchCategory">
-                <option value="name">Name</option>
-                <option value="race">Race</option>
-                <option value="publisher">Publisher</option>
-                <option value="power">Power</option>
-            </select>
-            <input type="text" id="searchInput" placeholder="Search . . .">
-            <button type="submit" id="searchButton">Search</button>
-        </form>
+    <div id="header">
+        <!-- Search Superheroes -->
+        <div id="searchContainer">
+            <h2>Search Superheroes</h2>
+            <form id="searchForm">
+                <label for="searchInput">Search by:</label>
+                <select id="searchCategory">
+                    <option value="name">Name</option>
+                    <option value="race">Race</option>
+                    <option value="publisher">Publisher</option>
+                    <option value="power">Power</option>
+                </select>
+                <input type="text" id="searchInput" placeholder="Search . . .">
+                <button type="submit" id="searchButton">Search</button>
+            </form>
+        </div>
+
+        <!-- Favourite Lists -->
+        <div id="favouriteListsContainer">
+            <h2>Favourite Lists</h2>
+            <button id="addListButton">Add List</button>
+            <ul id="favouriteLists">
+                <!-- Favourite lists will be displayed here -->
+            </ul>
+        </div>
     </div>
-        <!-- Display Superheroes in a List -->
+
+    <!-- Display Superheroes in a List -->
     <div id="listDetails">
         <h2>Sort List: <span id="listName"></span></h2>
         <button id="sortByName">Sort by Name</button>
         <button id="sortByRace">Sort by Race</button>
         <button id="sortByPublisher">Sort by Publisher</button>
         <button id="sortByPower">Sort by Power</button>
+        <button id="selectButton">Add Heroes to Favourite List</but>
         <!-- <table id="listSuperheroes">
             <thead>
                 <tr>
@@ -45,22 +58,12 @@
             </tbody>
         </table> -->
     </div>
-        <!-- Favourite Lists -->
-    <br>
-    <h2>Favourite Lists</h2>
-    <ul id="favouriteLists">
-        <!-- Favourite lists will be displayed here -->
-    </ul>
+
     <!-- Display Search Results -->
     <div id="searchResults">
         <!-- Results will be displayed here -->
     </div>
 
-
-
-
-
     <script src="script.js"></script>
-    <!-- <script src="../server/index.js"></script> -->
 </body>
 </html>

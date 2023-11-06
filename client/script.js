@@ -3,6 +3,44 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Get a reference to the search button
   const searchButton = document.getElementById("searchButton");
+  displayFavoriteLists();
+  
+  //array to store selected results
+  const selectedResults = [];
+  const selectButton = document.getElementById("selectButton");
+
+  document.getElementById("searchResults").addEventListener("click", (event) => {
+    const listItem = event.target.closest("li");
+
+    if (listItem) {
+      // Toggle selection
+      if (listItem.classList.contains("selected")) {
+        console.log("selected");
+        listItem.classList.remove("selected");
+        const index = selectedResults.indexOf(listItem.dataset.id);
+        if (index > -1) {
+          selectedResults.splice(index, 1);
+        }
+      } else {
+        listItem.classList.add("selected");
+        selectedResults.push(listItem.dataset.id);
+      }
+    }
+  });
+
+  selectButton.addEventListener("click", () => {
+    // Add logic to add selected results to the favorite list
+    // For example, call a function like addSelectedResultsToFavorites(selectedResults)
+    // Reset selectedResults array after adding them
+    // addSelectedResultsToFavorites(selectedResults);
+    // selectedResults.length = 0;
+
+    // Remove the selection (reset background color)
+    const selectedItems = document.querySelectorAll(".selected");
+    for (const selectedItem of selectedItems) {
+      selectedItem.classList.remove("selected");
+    }
+  });
 
   // Add a click event listener to the search button
   searchButton.addEventListener("click", (event) => {
@@ -11,7 +49,70 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+document.getElementById('addListButton').addEventListener('click', () => {
+  const listName = prompt('Enter the name for the new list:');
+  if (listName) {
+    // Create a new list and add it to the UI
+    createList(listName);
+    displayFavoriteLists();
+  }
+});
 
+//function to create a fav list in the back end
+async function createList(listName){
+  const url = `/api/lists/${listName}`;
+  try{
+    const response = await fetch(url, {
+      method: 'POST',
+    });
+    if (response.status === 201) {
+      console.log('List created successfully');
+    } else if (response.status === 404) {
+      console.log('List name already exists');
+    } else {
+      console.error('Error:', response.status);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+//function to display fav lists as buttons
+async function displayFavoriteLists() {
+  const favouriteListsContainer = document.getElementById('favouriteLists');
+  favouriteListsContainer.innerHTML = ''; // Clear existing content
+
+  // Fetch the list names and add buttons for each list
+  const listNames = await fetchFavoriteListNames();
+  listNames.listNames.forEach((listName) => {
+    const listButton = document.createElement('button');
+    listButton.textContent = listName;
+    listButton.addEventListener('click', () => {
+      // Implement logic to display superheroes from the selected list
+      // For example, call a function like displaySuperheroesInList(listName)
+    });
+
+    favouriteListsContainer.appendChild(listButton);
+  });
+}
+
+//
+
+//fetch the saved list names from back end
+async function fetchFavoriteListNames() {
+  try {
+    const response = await fetch(`/api/lists/names`);
+    if (!response.ok) {
+      throw new Error('Request failed');
+    }
+    const data = await response.json();
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+    return null; // Handle the error gracefully
+  }
+}
 
 
 //function to get all hero info
@@ -22,7 +123,6 @@ async function getHero(id) {
       throw new Error('Request failed');
     }
     const data = await response.json();
-    console.log(data);
     return data;
   } catch (error) {
     console.error('Error:', error);
@@ -39,7 +139,6 @@ function getSuperheroInfo(id) {
     .then((response) => response.json())
     .then((data) => {
       // Handle the data received from the server
-      console.log(data);
     })
     .catch((error) => {
       console.error('Error:', error);
@@ -52,7 +151,6 @@ function getSuperheroPowers(id) {
     .then((response) => response.json())
     .then((data) => {
       // Handle the data received from the server
-      console.log(data);
     })
     .catch((error) => {
       console.error('Error:', error);
@@ -61,12 +159,10 @@ function getSuperheroPowers(id) {
 
 // Function to get all available publisher names
 function getAllPublishers() {
-  console.log("publishers");
   fetch('/api/publishers')
     .then((response) => response.json())
     .then((data) => {
       // Handle the data received from the server
-      console.log(data);
     })
     .catch((error) => {
       console.error('Error:', error);
@@ -89,7 +185,7 @@ async function displayHeroes(data){
     //hero info:
     //name
     const resultNameBold = document.createElement('strong');
-    resultNameBold.style.color = 'blue';
+    resultNameBold.style.color = '#007acc';
     resultNameBold.appendChild(document.createTextNode(hero.name));
     //gender
     const resultGender = document.createElement('span');
@@ -128,14 +224,14 @@ async function displayHeroes(data){
     resultWeight.style.fontSize = '14px';
     resultWeight.appendChild(document.createTextNode(`Weight: ${hero.Weight}`));
     //button to add to fav list
-    const addToFavButton = document.createElement('button');
-    addToFavoButton.textContent = 'Add to Favorite List';
-    addToFavButton.addEventListener('click', () => {
-      // Add logic to add this hero to the favorite list
-      // You can implement this logic in your script.js
-      // For example, create a function to handle this action.
-      // addToFavoriteList(hero);
-    });
+    // const addToFavButton = document.createElement('button');
+    // addToFavButton.textContent = 'Add to Favorite List';
+    // addToFavButton.addEventListener('click', () => {
+    //   // Add logic to add this hero to the favorite list
+    //   // You can implement this logic in your script.js
+    //   // For example, create a function to handle this action.
+    //   // addToFavoriteList(hero);
+    // });
     //append hero info to a list item:
     listItem.appendChild(resultNameBold);
     listItem.appendChild(document.createElement('br'));
@@ -162,9 +258,7 @@ async function displayHeroes(data){
   // Function to search for superheroes based on a pattern and field
   async function searchSuperheroes() {
     const pattern = document.getElementById("searchCategory").value;
-    console.log("pattern: " + pattern);
     const field = document.getElementById("searchInput").value;
-    console.log("field: " + field);
     const n = 10;
     try {
       const response = await fetch(`/api/search/${pattern}/${field}/${n}`);
@@ -218,7 +312,6 @@ async function displayHeroes(data){
       .then((response) => response.json())
       .then((data) => {
         // Handle the data received from the server
-        console.log(data);
       })
       .catch((error) => {
         console.error('Error:', error);
@@ -248,7 +341,6 @@ async function displayHeroes(data){
       .then((response) => response.json())
       .then((data) => {
         // Handle the data received from the server
-        console.log(data);
       })
       .catch((error) => {
         console.error('Error:', error);
