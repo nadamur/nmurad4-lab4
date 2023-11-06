@@ -7,15 +7,15 @@ document.addEventListener("DOMContentLoaded", () => {
   
   //array to store selected results
   const selectedResults = [];
-  const selectButton = document.getElementById("selectButton");
+  const selectButton = document.getElementById("listAddButton");
 
+  //selects results
   document.getElementById("searchResults").addEventListener("click", (event) => {
     const listItem = event.target.closest("li");
 
     if (listItem) {
       // Toggle selection
       if (listItem.classList.contains("selected")) {
-        console.log("selected");
         listItem.classList.remove("selected");
         const index = selectedResults.indexOf(listItem.dataset.id);
         if (index > -1) {
@@ -28,12 +28,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  //adds selected results to list
   selectButton.addEventListener("click", () => {
     // Add logic to add selected results to the favorite list
     // For example, call a function like addSelectedResultsToFavorites(selectedResults)
     // Reset selectedResults array after adding them
-    // addSelectedResultsToFavorites(selectedResults);
-    // selectedResults.length = 0;
+    addSelectedResultsToFavorites(selectedResults);
+    selectedResults.length = 0;
 
     // Remove the selection (reset background color)
     const selectedItems = document.querySelectorAll(".selected");
@@ -49,6 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+//adds new list to favourites
 document.getElementById('addListButton').addEventListener('click', () => {
   const listName = prompt('Enter the name for the new list:');
   if (listName) {
@@ -57,6 +59,25 @@ document.getElementById('addListButton').addEventListener('click', () => {
     displayFavoriteLists();
   }
 });
+
+//adds selected results to list
+async function addSelectedResultsToFavorites(selectedResults){
+  const url = `/api/lists/add/${listName}`;
+  try{
+    const response = await fetch(url, {
+      method: 'POST',
+    });
+    if (response.status === 201) {
+      console.log('List created successfully');
+    } else if (response.status === 404) {
+      console.log('List name already exists');
+    } else {
+      console.error('Error:', response.status);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
 
 //function to create a fav list in the back end
 async function createList(listName){
@@ -80,26 +101,34 @@ async function createList(listName){
 //function to display fav lists as buttons
 async function displayFavoriteLists() {
   const favouriteListsContainer = document.getElementById('favouriteLists');
+  const dropDownLists = document.getElementById("listNames");
   favouriteListsContainer.innerHTML = ''; // Clear existing content
-
   // Fetch the list names and add buttons for each list
-  const listNames = await fetchFavoriteListNames();
+  const listNames = await getFavoriteListNames();
   listNames.listNames.forEach((listName) => {
+    //new option in drop down list
+    const newOption = document.createElement("option");
+    newOption.value = `${listName}`;
+    newOption.text = `${listName}`;
+    dropDownLists.appendChild(newOption);
+    //new button for fav list
     const listButton = document.createElement('button');
     listButton.textContent = listName;
     listButton.addEventListener('click', () => {
-      // Implement logic to display superheroes from the selected list
-      // For example, call a function like displaySuperheroesInList(listName)
+      addHeroesToList();
     });
 
     favouriteListsContainer.appendChild(listButton);
   });
 }
 
-//
+//adds heroes to a list
+function addHeroesToList(){
+
+}
 
 //fetch the saved list names from back end
-async function fetchFavoriteListNames() {
+async function getFavoriteListNames() {
   try {
     const response = await fetch(`/api/lists/names`);
     if (!response.ok) {
