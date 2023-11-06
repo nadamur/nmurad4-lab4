@@ -3,8 +3,8 @@ const app = express();
 const port = 3000;
 const path = require('path');
 const fs = require('fs');
-const superheroesInfo = require('C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_info.json');
-const superheroesPowers = require('C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_powers.json');
+const superheroesInfo = require('../superhero_info.json');
+const superheroesPowers = require('../superhero_powers.json');
 const mainDir = path.join(__dirname, '../');
 const clientDir = path.join(__dirname, '../client');
 app.use(express.static(mainDir));
@@ -46,7 +46,7 @@ app.use(express.json());
 
 //returns all fav list names
 app.get('/api/lists/names', (req, res) => {
-    const filePath = 'C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_lists.json';
+    const filePath = '../superhero_lists.json';
     fs.readFile(filePath, 'utf-8', (err, data) => {
       if (err) {
         console.error('Error reading JSON file:', err);
@@ -124,7 +124,16 @@ app.get('/api/search/:pattern/:field/:n', (req, res) => {
             getHeroIds(n,'Publisher',field, res);
             break;
         case 'power':
-            const heroes = superheroesPowers.filter((hero) => hero[field] === 'True');
+            const heroes = superheroesPowers.filter(hero => {
+                // Iterate through each property (power name) of the hero object
+                for (const power in hero) {
+                    if (hero[power] === "True" && power.toLowerCase().includes(field)) {
+                        return true;
+                    }
+                }
+                return null;
+            });
+            console.log("heroes: " + heroes);
             const names = heroes.map((hero) => hero.hero_names);
             ids = [];
             for (const n of names){
@@ -146,7 +155,7 @@ app.get('/api/search/:pattern/:field/:n', (req, res) => {
 //this method will create a list with a list name and returns an error if the name already exists
 app.post('/api/lists/:listName', (req, res) => {
     const listName = req.params.listName;
-    const filePath = 'C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_lists.json';
+    const filePath = '../superhero_lists.json';
     fs.readFile(filePath, 'utf-8', (err, data) => {
         if (err) {
           console.error('Error reading JSON file:', err);
@@ -195,7 +204,7 @@ app.put('/api/lists/add/:listNameAndIds', (req, res) => {
     //assuming we are receiving the URL in the format: /api/lists/myList?ids=1,2,3
     const ids = req.query.ids;
     idArray = ids.split(',');
-    const filePath = 'C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_lists.json';
+    const filePath = '../superhero_lists.json';
     fs.readFile(filePath, 'utf-8', (err, data) => {
         if (err) {
           console.error('Error reading JSON file:', err);
@@ -224,7 +233,7 @@ app.put('/api/lists/add/:listNameAndIds', (req, res) => {
 //get list of superhero IDs for given list name
 app.get('/api/lists/:listName', (req, res) => {
     const listName = req.params.listName;
-    const filePath = 'C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_lists.json';
+    const filePath = '../superhero_lists.json';
     fs.readFile(filePath, 'utf-8', (err, data) => {
         if (err) {
           console.error('Error reading JSON file:', err);
@@ -245,7 +254,7 @@ app.get('/api/lists/:listName', (req, res) => {
 //delete list with given name
 app.put('/api/lists/delete/:listName', (req, res) => {
     const listName = req.params.listName;
-    const filePath = 'C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_lists.json';
+    const filePath = '../superhero_lists.json';
     fs.readFile(filePath, 'utf-8', (err, data) => {
         if (err) {
           console.error('Error reading JSON file:', err);
@@ -274,7 +283,7 @@ app.put('/api/lists/delete/:listName', (req, res) => {
 //get list of names, info and powers of all superheroes in list
 app.get('/api/lists/info/:listName', (req, res) => {
     const listName = req.params.listName;
-    const filePath = 'C:/se 3316/lab 3/se3316-nmurad4-lab3/superhero_lists.json';
+    const filePath = '../superhero_lists.json';
     fs.readFile(filePath, 'utf-8', (err, data) => {
         if (err) {
           console.error('Error reading JSON file:', err);

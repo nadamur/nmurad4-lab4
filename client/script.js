@@ -126,25 +126,29 @@ async function displayFavoriteLists() {
   favouriteListsContainer.innerHTML = ''; // Clear existing content
   // Fetch the list names and add buttons for each list
   const listNames = await getFavoriteListNames();
-  listNames.listNames.forEach((listName) => {
-    //new option in drop down list
-    const newOption = document.createElement("option");
-    newOption.value = `${listName}`;
-    newOption.text = `${listName}`;
-    dropDownLists.appendChild(newOption);
-    //new button for fav list
-    const listButton = document.createElement('button');
-    listButton.textContent = listName;
-    //display fav list when clicked
-    //send data to search function to display results
-    listButton.addEventListener('click', async () => {
-      const data = await getFavoriteListIds(listName);
-      displayHeroes(data, sortCriteria = 0);
-      
+  if(listNames){
+    listNames.listNames.forEach((listName) => {
+      //new option in drop down list
+      const newOption = document.createElement("option");
+      newOption.value = `${listName}`;
+      newOption.text = `${listName}`;
+      console.log(newOption.text);
+      dropDownLists.appendChild(newOption);
+      //new button for fav list
+      const listButton = document.createElement('button');
+      listButton.textContent = listName;
+      //display fav list when clicked
+      //send data to search function to display results
+      listButton.addEventListener('click', async () => {
+        const data = await getFavoriteListIds(listName);
+        displayHeroes(data, sortCriteria = 0);
+        
+      });
+  
+      favouriteListsContainer.appendChild(listButton);
     });
-
-    favouriteListsContainer.appendChild(listButton);
-  });
+  }
+  
 }
 
 //get saved list's ids
@@ -167,7 +171,7 @@ async function getFavoriteListNames() {
   try {
     const response = await fetch(`/api/lists/names`);
     if (!response.ok) {
-      throw new Error('Request failed');
+      return null;
     }
     const data = await response.json();
     return data;
@@ -488,6 +492,3 @@ async function getPowers(id) {
         console.error('Error:', error);
       });
   }
-  
-
-  //add function to tell user if no hero exists
