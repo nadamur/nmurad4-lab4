@@ -8,6 +8,22 @@ document.addEventListener("DOMContentLoaded", () => {
   //array to store selected results
   const selectedResults = [];
   const selectButton = document.getElementById("listAddButton");
+  // Add event listeners for sorting buttons
+  document.getElementById('sortByName').addEventListener('click', () => {
+    searchSuperheroes('name');
+  });
+
+  document.getElementById('sortByRace').addEventListener('click', () => {
+    searchSuperheroes('race');
+  });
+
+  document.getElementById('sortByPublisher').addEventListener('click', () => {
+    searchSuperheroes('publisher');
+  });
+
+  document.getElementById('sortByPower').addEventListener('click', () => {
+    searchSuperheroes('power');
+  });
 
   //selects results
   document.getElementById("searchResults").addEventListener("click", (event) => {
@@ -27,15 +43,19 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   });
+  
 
   //adds selected results to list
   selectButton.addEventListener("click", () => {
-    // Add logic to add selected results to the favorite list
-    // For example, call a function like addSelectedResultsToFavorites(selectedResults)
+    event.preventDefault()
+    //current selected list name
+    const favList = document.getElementById("listNames");
+    const favListOption = favList.options[favList.selectedIndex];
+    const favListText = favListOption.text;
+    //call method to add selected heros to a list
+    addSelectedResultsToFavorites(favListText, selectedResults);
     // Reset selectedResults array after adding them
-    addSelectedResultsToFavorites(selectedResults);
     selectedResults.length = 0;
-
     // Remove the selection (reset background color)
     const selectedItems = document.querySelectorAll(".selected");
     for (const selectedItem of selectedItems) {
@@ -46,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Add a click event listener to the search button
   searchButton.addEventListener("click", (event) => {
     event.preventDefault(); // Prevent the form from submitting
-    searchSuperheroes(); // Call your search function
+    searchSuperheroes(criteria = 0); // Call your search function
   });
 });
 
@@ -61,13 +81,14 @@ document.getElementById('addListButton').addEventListener('click', () => {
 });
 
 //adds selected results to list
-async function addSelectedResultsToFavorites(selectedResults){
-  const url = `/api/lists/add/${listName}`;
+async function addSelectedResultsToFavorites(list, ids){
+  console.log(list)
+  const url = `/api/lists/add/${list}?ids=${ids}`;
   try{
     const response = await fetch(url, {
-      method: 'POST',
+      method: 'PUT',
     });
-    if (response.status === 201) {
+    if (response.status === 200) {
       console.log('List created successfully');
     } else if (response.status === 404) {
       console.log('List name already exists');
@@ -114,17 +135,31 @@ async function displayFavoriteLists() {
     //new button for fav list
     const listButton = document.createElement('button');
     listButton.textContent = listName;
-    listButton.addEventListener('click', () => {
-      addHeroesToList();
+    //display fav list when clicked
+    //send data to search function to display results
+    listButton.addEventListener('click', async () => {
+      const data = await getFavoriteListIds(listName);
+      displayHeroes(data, sortCriteria = 0);
+      
     });
 
     favouriteListsContainer.appendChild(listButton);
   });
 }
 
-//adds heroes to a list
-function addHeroesToList(){
-
+//get saved list's ids
+async function getFavoriteListIds(listName) {
+  try {
+    const response = await fetch(`/api/lists/${listName}`);
+    if (!response.ok) {
+      throw new Error('Request failed');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+    return null; // Handle the error gracefully
+  }
 }
 
 //fetch the saved list names from back end
@@ -135,7 +170,6 @@ async function getFavoriteListNames() {
       throw new Error('Request failed');
     }
     const data = await response.json();
-    console.log(data);
     return data;
   } catch (error) {
     console.error('Error:', error);
@@ -174,18 +208,6 @@ function getSuperheroInfo(id) {
     });
 }
 
-// Function to get superhero powers by ID
-function getSuperheroPowers(id) {
-  fetch(`/api/superheroes/${id}/power`)
-    .then((response) => response.json())
-    .then((data) => {
-      // Handle the data received from the server
-    })
-    .catch((error) => {
-      console.error('Error:', error);
-    });
-}
-
 // Function to get all available publisher names
 function getAllPublishers() {
   fetch('/api/publishers')
@@ -200,22 +222,43 @@ function getAllPublishers() {
 
 
 
-async function displayHeroes(data){
+async function displayHeroes(data, sortCriteria){
   const searchResultsDiv = document.getElementById('searchResults');
   // Clear existing options
   while (searchResultsDiv.firstChild) {
     searchResultsDiv.removeChild(searchResultsDiv.firstChild);
   }
   const resultList = document.createElement('ul');
+  const listItems = [];
   for (const i of data.ids) {
     //get hero info based on id
     const hero = await getHero(i);
+    //get hero powers
+    const powers = await getPowers(i);    
     const listItem = document.createElement('li');
+    //hero attributes as list item attributes
+    listItem.dataset.id = i;
+    listItem.dataset.name = hero.name;
+    listItem.dataset.Race = hero.Race;
+    listItem.dataset.Publisher = hero.Publisher;
     //hero info:
+    //powers
+    const resultPowers = document.createElement('span');
+    resultPowers.style.fontSize = '14px';
+    //if no powers, no need for list
+    if(powers === "No Powers"){
+      resultPowers.appendChild(document.createTextNode(`Powers: None, `));
+    }else if (powers.length > 1){
+      listItem.dataset.powers = powers.powers;
+      resultPowers.appendChild(document.createTextNode(`Powers: ${powers.powers.join(', ')}`));
+    }else{
+      listItem.dataset.powers = powers.powers;
+      resultPowers.appendChild(document.createTextNode(`Powers: ${powers.powers}`));
+    }
     //name
     const resultNameBold = document.createElement('strong');
     resultNameBold.style.color = '#007acc';
-    resultNameBold.appendChild(document.createTextNode(hero.name));
+    resultNameBold.appendChild(document.createTextNode(hero.name + " "));
     //gender
     const resultGender = document.createElement('span');
     resultGender.style.fontSize = '14px';
@@ -251,16 +294,7 @@ async function displayHeroes(data){
     //weight
     const resultWeight = document.createElement('span');
     resultWeight.style.fontSize = '14px';
-    resultWeight.appendChild(document.createTextNode(`Weight: ${hero.Weight}`));
-    //button to add to fav list
-    // const addToFavButton = document.createElement('button');
-    // addToFavButton.textContent = 'Add to Favorite List';
-    // addToFavButton.addEventListener('click', () => {
-    //   // Add logic to add this hero to the favorite list
-    //   // You can implement this logic in your script.js
-    //   // For example, create a function to handle this action.
-    //   // addToFavoriteList(hero);
-    // });
+    resultWeight.appendChild(document.createTextNode(`Weight: ${hero.Weight}, `));
     //append hero info to a list item:
     listItem.appendChild(resultNameBold);
     listItem.appendChild(document.createElement('br'));
@@ -273,32 +307,111 @@ async function displayHeroes(data){
     listItem.appendChild(resultRace);
     listItem.appendChild(resultSkin);
     listItem.appendChild(resultWeight);
-    //append list item to result list:
-    resultList.appendChild(listItem);
+    listItem.appendChild(resultPowers);
+    //push list item to array
+    listItems.push(listItem);
 
-    if (resultList.children.length > 0) {
-      searchResultsDiv.style.display = 'block';
-      searchResultsDiv.appendChild(resultList);
-    } else {
-      searchResultsDiv.style.display = 'none';
-    }
+  }
+  //sort list items based on sortCriteria
+  if(sortCriteria){
+    sortResults(listItems,sortCriteria);
+  }
+
+  //append listen items to result list
+  listItems.forEach((item) => {
+    resultList.appendChild(item);
+  });
+  //display results or hide results div
+  if (resultList.children.length > 0) {
+    searchResultsDiv.style.display = 'block';
+    searchResultsDiv.appendChild(resultList);
+  } else {
+    searchResultsDiv.style.display = 'none';
   }
 }
+
+
+function sortResults(listItems, criteria) {
+  listItems.sort((a, b) => {
+    switch (criteria){
+      case 'name':
+        const nameA = a.dataset.name;
+        const nameB = b.dataset.name;
+        return nameA.localeCompare(nameB);
+      case 'race':
+        const raceA = a.dataset.Race;
+        const raceB = b.dataset.Race;
+        return raceA.localeCompare(raceB);
+      case 'publisher':
+        const publisherA = a.dataset.Publisher;
+        const publisherB = b.dataset.Publisher;
+        return publisherA.localeCompare(publisherB);
+      case 'power':
+        const powerA = a.dataset.powers;
+        const powerB = b.dataset.powers;
+        return powerA.localeCompare(powerB);
+    }
+    
+  });
+}
+
+
+
+
+
+//function to get hero powers based on ID
+async function getPowers(id) {
+  try {
+    const response = await fetch(`/api/superheroes/${id}/power`);
+    if (!response.ok) {
+      throw new Error('Request failed');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+    return null; // Handle the error gracefully
+  }
+}
+
   // Function to search for superheroes based on a pattern and field
-  async function searchSuperheroes() {
+  async function searchSuperheroes(criteria) {
     const pattern = document.getElementById("searchCategory").value;
     const field = document.getElementById("searchInput").value;
+    const searchResultsDiv = document.getElementById('searchResults');
     const n = 10;
     try {
       const response = await fetch(`/api/search/${pattern}/${field}/${n}`);
       if (!response.ok) {
-        throw new Error('Request failed');
+        //if no heroes found, displays message
+        while (searchResultsDiv.firstChild) {
+          searchResultsDiv.removeChild(searchResultsDiv.firstChild);
+        }
+        const resultList = document.createElement('ul');
+        const listItem = document.createElement('li');
+        const resultString = document.createTextNode('No Heroes Found . . .');
+        listItem.appendChild(resultString);
+        resultList.appendChild(listItem);
+        if (resultList.children.length > 0) {
+          searchResultsDiv.style.display = 'block';
+          searchResultsDiv.appendChild(resultList);
+        } else {
+          searchResultsDiv.style.display = 'none';
+        }
+        //if heroes found
+        }else{
+          const data = await response.json();
+          console.log("data: " + data);
+          if(criteria){
+            displayHeroes(data, criteria);
+          }else{
+            displayHeroes(data, sortCriteria = 0);
+          }
+        }
+        
+      } catch (error) {
+        console.error('Error:', error);
       }
-      const data = await response.json();
-      displayHeroes(data);
-    } catch (error) {
-      console.error('Error:', error);
-    }
   }
   
   // Function to create a new list of superheroes
@@ -376,3 +489,5 @@ async function displayHeroes(data){
       });
   }
   
+
+  //add function to tell user if no hero exists

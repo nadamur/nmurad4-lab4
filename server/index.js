@@ -31,8 +31,13 @@ function getHeroInfo(id){
 //function takes hero id and returns all powers
 function getHeroPower(id){
     const superhero = superheroesInfo.find((hero) => hero.id === id);
-    console.log(superhero);
+    if (!superhero) {
+        return null;
+    }
     const superheroPower = superheroesPowers.find((hero) => hero.hero_names.toLowerCase() === superhero.name.toLowerCase());
+    if (!superheroPower) {
+        return null;
+    }
     const powers = Object.keys(superheroPower).filter(power => superheroPower[power] === 'True');
     return powers;
 }
@@ -67,7 +72,6 @@ app.get('/api/lists/names', (req, res) => {
 
 //this method will return all the hero info depending on id
 app.get('/api/superheroes/:id', (req, res) => {
-    console.log("get hero info by id")
     const superheroId = parseInt(req.params.id);
     const superhero = getHeroInfo(superheroId);
   
@@ -87,6 +91,9 @@ app.get('/api/superheroes/:id/power', (req, res) => {
       return res.status(404).json({ error: 'Superhero not found' });
     }
     const powers = getHeroPower(superheroId);
+    if(powers === null){
+        res.json({powers: "No Powers"});
+    }
     if (powers.length > 0) {
       res.json({ powers });
     } else {
@@ -102,7 +109,6 @@ app.get('/api/publishers', (req, res) => {
 
 //this method will return n number of search results (hero ids) for given search pattern
 app.get('/api/search/:pattern/:field/:n', (req, res) => {
-    console.log("search by pattern");
     const n = parseInt(req.params.n);
     const pattern = req.params.pattern;
     const field = req.params.field;
@@ -119,9 +125,7 @@ app.get('/api/search/:pattern/:field/:n', (req, res) => {
             break;
         case 'power':
             const heroes = superheroesPowers.filter((hero) => hero[field] === 'True');
-            console.log("heroes" + heroes);
             const names = heroes.map((hero) => hero.hero_names);
-            console.log("names " + names);
             ids = [];
             for (const n of names){
                 const hero = superheroesInfo.find((hero) => hero.name.toLowerCase() === n.toLowerCase());
@@ -228,13 +232,11 @@ app.get('/api/lists/:listName', (req, res) => {
         }
         const jsonData = JSON.parse(data);
         //if the name does exist, update the IDs
-        idArray = jsonData[listName];
-        if(idArray){
-            res.json({idArray});
+        ids = jsonData[listName];
+        if(ids){
+            res.json({ids});
         }else{
             //if it doesnt exist, send an error
-            console.log(idArray);
-            console.log(listName);
             res.status(404).json({ error: 'List name does not exist' });
         }     
       }); 
@@ -281,12 +283,10 @@ app.get('/api/lists/info/:listName', (req, res) => {
         const jsonData = JSON.parse(data);
         //if the name does exist, update the IDs
         idArray = jsonData[listName];
-        console.log(idArray);
         if(idArray){
             heroList = [];
             for (const i of idArray){
                 const info = getHeroInfo(parseInt(i));
-                console.log(i);
                 const powers = getHeroPower(parseInt(i));
                 const heroWithPowers = {
                     ...info,
