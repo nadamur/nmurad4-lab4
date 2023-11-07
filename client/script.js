@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Get a reference to the search button
   const searchButton = document.getElementById("searchButton");
   displayFavoriteLists();
+  deleteLists();
   
   //array to store selected results
   const selectedResults = [];
@@ -75,7 +76,19 @@ document.getElementById('addListButton').addEventListener('click', () => {
   const listName = prompt('Enter the name for the new list:');
   if (listName) {
     // Create a new list and add it to the UI
+    //first
     createList(listName);
+    displayFavoriteLists();
+  }
+});
+
+//deletes list to favourites
+document.getElementById('deleteListButton').addEventListener('click', () => {
+  const listName = document.getElementById("listNamesToDelete").value;
+
+  if (listName) {
+    // Create a new list and add it to the UI
+    deleteList(listName);
     displayFavoriteLists();
   }
 });
@@ -84,6 +97,25 @@ document.getElementById('addListButton').addEventListener('click', () => {
 async function addSelectedResultsToFavorites(list, ids){
   console.log(list)
   const url = `/api/lists/add/${list}?ids=${ids}`;
+  try{
+    const response = await fetch(url, {
+      method: 'PUT',
+    });
+    if (response.status === 200) {
+      console.log('List created successfully');
+    } else if (response.status === 404) {
+      console.log('List name already exists');
+    } else {
+      console.error('Error:', response.status);
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+//function to delete a fav list in the back end
+async function deleteList(listName){
+  const url = `/api/lists/delete/${listName}`;
   try{
     const response = await fetch(url, {
       method: 'PUT',
@@ -118,6 +150,25 @@ async function createList(listName){
     console.error('Error:', error);
   }
 }
+
+//function to delete a list
+async function deleteLists() {
+  const dropDownList = document.getElementById("listNamesToDelete");
+// Fetch the list names and add buttons for each list
+  const listNames = await getFavoriteListNames();
+  if(listNames){
+    listNames.listNames.forEach((listName) => {
+      //new option in drop down list
+      const newOption = document.createElement("option");
+      newOption.value = `${listName}`;
+      newOption.text = `${listName}`;
+      console.log(newOption.text);
+      dropDownList.appendChild(newOption);
+    });
+  }
+  
+}
+
 
 //function to display fav lists as buttons
 async function displayFavoriteLists() {
@@ -197,20 +248,6 @@ async function getHero(id) {
   }
 }
 
-
-
-
-// Function to get all superhero information by ID
-function getSuperheroInfo(id) {
-  fetch(`/api/superheroes/${id}`)
-    .then((response) => response.json())
-    .then((data) => {
-      // Handle the data received from the server
-    })
-    .catch((error) => {
-      console.error('Error:', error);
-    });
-}
 
 // Function to get all available publisher names
 function getAllPublishers() {
@@ -383,7 +420,7 @@ async function getPowers(id) {
     const pattern = document.getElementById("searchCategory").value;
     const field = document.getElementById("searchInput").value;
     const searchResultsDiv = document.getElementById('searchResults');
-    const n = 10;
+    const n = 20;
     try {
       const response = await fetch(`/api/search/${pattern}/${field}/${n}`);
       if (!response.ok) {

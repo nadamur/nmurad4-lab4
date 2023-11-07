@@ -10,7 +10,7 @@
 <body>
 
     <div id="header">
-        <!-- Search Superheroes -->
+        <!-- Search -->
         <div id="searchContainer">
             <h2>Search Superheroes</h2>
             <form id="searchForm">
@@ -30,6 +30,12 @@
         <div id="favouriteListsContainer">
             <h2>Favourite Lists</h2>
             <button id="addListButton">Add List</button>
+            <form id="deleteForm">
+                <label for="listNamesToDelete">Delete List:</label>
+                <select id="listNamesToDelete">
+                </select>
+                <button type="submit" id="deleteListButton">Delete</button>
+            </form>
             <ul id="favouriteLists">
                 <!-- Favourite lists will be displayed here -->
             </ul>
