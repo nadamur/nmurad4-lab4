@@ -19,8 +19,10 @@ function getHeroIds(n, pattern, field, res){
     if (ids.length > 0) {
         const limitedIds = ids.slice(0, n);
         res.json({ ids: limitedIds });
+        return;
     } else {
-    res.status(404).json({ error: 'No heroes found' });
+        res.status(404).json({ error: 'No heroes found' });
+        return;
     }
 }
 //function takes hero id and returns all hero info
@@ -45,7 +47,7 @@ function getHeroPower(id){
 app.use(express.json());
 
 //returns all fav list names
-app.get('/api/lists/names', (req, res) => {
+app.get('/api/lists/fav/names', (req, res) => {
     const filePath = '../superhero_lists.json';
     fs.readFile(filePath, 'utf-8', (err, data) => {
       if (err) {
@@ -60,12 +62,15 @@ app.get('/api/lists/names', (req, res) => {
   
         if (listNames.length > 0) {
           res.json({ listNames });
+          return;
         } else {
           res.status(404).json({ error: 'No lists found' });
+          return;
         }
       } catch (parseError) {
         console.error('Error parsing JSON data:', parseError);
         res.status(500).json({ error: 'Error parsing JSON data' });
+        return;
       }
     });
   });
@@ -80,6 +85,7 @@ app.get('/api/superheroes/:id', (req, res) => {
     }
   
     res.json(superhero);
+    return;
 });
 
 //this method will return the powers of hero based on id
@@ -93,9 +99,11 @@ app.get('/api/superheroes/:id/power', (req, res) => {
     const powers = getHeroPower(superheroId);
     if(powers === null){
         res.json({powers: "No Powers"});
+        return;
     }
     if (powers.length > 0) {
       res.json({ powers });
+      return;
     } else {
       res.status(404).json({ error: 'No powers found for this superhero' });
     }
@@ -145,8 +153,10 @@ app.get('/api/search/:pattern/:field/:n', (req, res) => {
             if (ids.length > 0) {
                 const limitedIds = ids.slice(0, n);
                 res.json({ ids: limitedIds });
+                return;
             } else {
             res.status(404).json({ error: 'No heroes found for this publisher' });
+            return;
             }
             break;
     }
@@ -154,6 +164,7 @@ app.get('/api/search/:pattern/:field/:n', (req, res) => {
 
 //this method will create a list with a list name and returns an error if the name already exists
 app.post('/api/lists/:listName', (req, res) => {
+    console.log("here");
     const listName = req.params.listName;
     const filePath = '../superhero_lists.json';
     fs.readFile(filePath, 'utf-8', (err, data) => {
@@ -164,35 +175,45 @@ app.post('/api/lists/:listName', (req, res) => {
         //if there is data in the json file
         if (data){
             const jsonData = JSON.parse(data);
-            //if the list name already exists, send error
-            if (jsonData.hasOwnProperty(listName)){
-                res.status(404).json({ error: 'List name already exists' });
+            console.log('Parsed JSON Data:', jsonData);
+            console.log('listName:', listName);
+            console.log('Keys in jsonData:', Object.keys(jsonData));
+            jsonKeys = Object.keys(jsonData);
+            for (key of jsonKeys){
+                if (key === listName){
+                    res.status(404).json({ error: 'List name already exists' });
+                    return;
+                }
             }
+            console.log("writing");
             const newListName = listName;
             const newSuperheroIds = [];
             jsonData[newListName] = newSuperheroIds;
-      
             const jsonString = JSON.stringify(jsonData, null, 2);
             fs.writeFile(filePath, jsonString, 'utf-8', (writeErr) => {
             if (writeErr) {
                 console.error('Error writing JSON file:', writeErr);
                 res.status(500).json({ error: 'Internal server error' });
+                return;
             } else {
                 console.log('JSON data has been updated and written to', filePath);
                 res.sendStatus(201);
+                return;
             }
             });
         }else{
             //if there is no data in the json file, must start with initial data (can not parse)
-            const initialData = { [listName]: [] };
+            const initialData = { [normalizedListName]: [] };
             
             fs.writeFile(filePath, JSON.stringify(initialData, null, 2), 'utf-8', (writeErr) => {
                 if (writeErr) {
                     console.error('Error writing JSON file:', writeErr);
                     res.status(500).json({ error: 'Internal server error' });
+                    return;
                 } else {
                     console.log('JSON data has been updated and written to', filePath);
                     res.sendStatus(201);
+                    return;
                 }
                 });
         }
@@ -209,6 +230,7 @@ app.put('/api/lists/add/:listNameAndIds', (req, res) => {
         if (err) {
           console.error('Error reading JSON file:', err);
           res.status(500).json({ error: 'Internal server error' });
+          return;
         }
         const jsonData = JSON.parse(data);
         //if the name does exist, update the IDs
@@ -219,13 +241,16 @@ app.put('/api/lists/add/:listNameAndIds', (req, res) => {
             if (writeErr) {
                 console.error('Error writing JSON file:', writeErr);
                 res.status(500).json({ error: 'Internal server error' });
+                return;
             } else {
                 res.sendStatus(200);
+                return;
             }
             });
         }else{
             //if it doesnt exist, send an error
             res.status(404).json({ error: 'List name does not exist' });
+            return;
         }        
       });
 });
@@ -238,12 +263,14 @@ app.get('/api/lists/:listName', (req, res) => {
         if (err) {
           console.error('Error reading JSON file:', err);
           res.status(500).json({ error: 'Internal server error' });
+          return;
         }
         const jsonData = JSON.parse(data);
         //if the name does exist, update the IDs
         ids = jsonData[listName];
         if(ids){
             res.json({ids});
+            return;
         }else{
             //if it doesnt exist, send an error
             res.status(404).json({ error: 'List name does not exist' });
@@ -307,6 +334,7 @@ app.get('/api/lists/info/:listName', (req, res) => {
         }else{
             //if it doesnt exist, send an error
             res.status(404).json({ error: 'List name does not exist' });
+            return;
         }     
       }); 
 });

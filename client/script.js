@@ -3,7 +3,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Get a reference to the search button
   const searchButton = document.getElementById("searchButton");
-  displayFavoriteLists();
+  displayFavoriteListsButtons();
+  addLists();
   deleteLists();
   
   //array to store selected results
@@ -72,13 +73,23 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 //adds new list to favourites
-document.getElementById('addListButton').addEventListener('click', () => {
+document.getElementById('addListButton').addEventListener('click', async () => {
   const listName = prompt('Enter the name for the new list:');
   if (listName) {
     // Create a new list and add it to the UI
-    //first
-    createList(listName);
-    displayFavoriteLists();
+    //first sanitize the list name
+    if (listName.length < 3 || listName.length > 50) {
+      alert('List name should be between 3 and 50 characters.');
+    } else if (!/^[a-zA-Z0-9\s-]+$/.test(listName)) {
+      alert('List name can only contain letters, numbers, spaces, and hyphens.');
+    } else {
+      // sanitization: Remove any potentially harmful characters or escape them
+      const sanitizedListName = escapeHtml(listName);
+      await createList(sanitizedListName);
+      displayFavoriteListsButtons();
+      addLists();
+      deleteLists();
+    }
   }
 });
 
@@ -89,13 +100,14 @@ document.getElementById('deleteListButton').addEventListener('click', () => {
   if (listName) {
     // Create a new list and add it to the UI
     deleteList(listName);
-    displayFavoriteLists();
+    deleteLists();
+    displayFavoriteListsButtons();
+    addLists();
   }
 });
 
 //adds selected results to list
 async function addSelectedResultsToFavorites(list, ids){
-  console.log(list)
   const url = `/api/lists/add/${list}?ids=${ids}`;
   try{
     const response = await fetch(url, {
@@ -142,49 +154,63 @@ async function createList(listName){
     if (response.status === 201) {
       console.log('List created successfully');
     } else if (response.status === 404) {
-      console.log('List name already exists');
+      alert('List name already exists, try again');
     } else {
-      console.error('Error:', response.status);
+      console.error('Error in creating list', response.status);
     }
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in creating list:', error);
   }
 }
 
 //function to delete a list
 async function deleteLists() {
   const dropDownList = document.getElementById("listNamesToDelete");
-// Fetch the list names and add buttons for each list
+   // Clear the previous options in the drop-down list
+  dropDownList.innerHTML = "";
+  // Fetch the list names and add buttons for each list
   const listNames = await getFavoriteListNames();
   if(listNames){
     listNames.listNames.forEach((listName) => {
+      console.log("delete lists: " + listName);
       //new option in drop down list
       const newOption = document.createElement("option");
       newOption.value = `${listName}`;
       newOption.text = `${listName}`;
-      console.log(newOption.text);
       dropDownList.appendChild(newOption);
     });
   }
   
 }
 
+//function to display list names in 'add selected heroes' drop-down menu
+async function addLists() {
+  const dropDownList = document.getElementById("listNames");
+   // Clear the previous options in the drop-down list
+  dropDownList.innerHTML = "";
+  // Fetch the list names and add buttons for each list
+  const listNames = await getFavoriteListNames();
+  if(listNames){
+    listNames.listNames.forEach((listName) => {
+      console.log("add lists: " + listName);
+      //new option in drop down list
+      const newOption = document.createElement("option");
+      newOption.value = `${listName}`;
+      newOption.text = `${listName}`;
+      dropDownList.appendChild(newOption);
+    });
+  }
+}
 
-//function to display fav lists as buttons
-async function displayFavoriteLists() {
+//function to display fav list names as buttons
+async function displayFavoriteListsButtons() {
   const favouriteListsContainer = document.getElementById('favouriteLists');
-  const dropDownLists = document.getElementById("listNames");
   favouriteListsContainer.innerHTML = ''; // Clear existing content
   // Fetch the list names and add buttons for each list
   const listNames = await getFavoriteListNames();
   if(listNames){
     listNames.listNames.forEach((listName) => {
-      //new option in drop down list
-      const newOption = document.createElement("option");
-      newOption.value = `${listName}`;
-      newOption.text = `${listName}`;
-      console.log(newOption.text);
-      dropDownLists.appendChild(newOption);
+      console.log("displayFavButtons: " + listName);
       //new button for fav list
       const listButton = document.createElement('button');
       listButton.textContent = listName;
@@ -192,10 +218,8 @@ async function displayFavoriteLists() {
       //send data to search function to display results
       listButton.addEventListener('click', async () => {
         const data = await getFavoriteListIds(listName);
-        displayHeroes(data, sortCriteria = 0);
-        
+        displayHeroes(data, sortCriteria = 0);   
       });
-  
       favouriteListsContainer.appendChild(listButton);
     });
   }
@@ -220,7 +244,7 @@ async function getFavoriteListIds(listName) {
 //fetch the saved list names from back end
 async function getFavoriteListNames() {
   try {
-    const response = await fetch(`/api/lists/names`);
+    const response = await fetch(`/api/lists/fav/names`);
     if (!response.ok) {
       return null;
     }
@@ -419,10 +443,12 @@ async function getPowers(id) {
   async function searchSuperheroes(criteria) {
     const pattern = document.getElementById("searchCategory").value;
     const field = document.getElementById("searchInput").value;
+    //sanitization
+    const sanitizedField = escapeHtml(field);
     const searchResultsDiv = document.getElementById('searchResults');
     const n = 20;
     try {
-      const response = await fetch(`/api/search/${pattern}/${field}/${n}`);
+      const response = await fetch(`/api/search/${pattern}/${sanitizedField}/${n}`);
       if (!response.ok) {
         //if no heroes found, displays message
         while (searchResultsDiv.firstChild) {
@@ -442,7 +468,6 @@ async function getPowers(id) {
         //if heroes found
         }else{
           const data = await response.json();
-          console.log("data: " + data);
           if(criteria){
             displayHeroes(data, criteria);
           }else{
@@ -455,26 +480,15 @@ async function getPowers(id) {
       }
   }
   
-  // Function to create a new list of superheroes
-  function createSuperheroList(listName) {
-    fetch(`/api/lists/${listName}`, {
-      method: 'POST',
-    })
-      .then((response) => {
-        if (response.status === 201) {
-          console.log('List created successfully');
-        } else {
-          console.error('Error:', response.status);
-        }
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-  }
   
   // Function to save a list of superhero IDs to a given list name
   function saveSuperheroList(listName, ids) {
-    fetch(`/api/lists/add/${listName}?ids=${ids.join(',')}`, {
+    // sanitization: Remove potentially harmful characters from listName
+    const sanitizedListName = escapeHtml(listName);
+
+    // sanitization: Ensure that IDs are properly formatted (comma-separated)
+    const sanitizedIds = ids.map(id => parseInt(id)).filter(id => !isNaN(id));
+    fetch(`/api/lists/add/${sanitizedListName}?ids=${sanitizedIds.join(',')}`, {
       method: 'PUT',
     })
       .then((response) => {
@@ -489,17 +503,6 @@ async function getPowers(id) {
       });
   }
   
-  // Function to get the list of superhero IDs for a given list name
-  function getSuperheroList(listName) {
-    fetch(`/api/lists/${listName}`)
-      .then((response) => response.json())
-      .then((data) => {
-        // Handle the data received from the server
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-  }
   
   // Function to delete a list of superheroes with a given name
   function deleteSuperheroList(listName) {
@@ -518,14 +521,19 @@ async function getPowers(id) {
       });
   }
   
-  // Function to get a list of names, information, and powers of all superheroes saved in a given list
-  function getSuperheroListInfo(listName) {
-    fetch(`/api/lists/info/${listName}`)
-      .then((response) => response.json())
-      .then((data) => {
-        // Handle the data received from the server
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-  }
+
+  // Function to escape HTML characters to prevent XSS
+function escapeHtml(unsafe) {
+  return unsafe.replace(/[&<"']/g, function (match) {
+    switch (match) {
+      case '&':
+        return '&amp;';
+      case '<':
+        return '&lt;';
+      case '"':
+        return '&quot;';
+      case "'":
+        return '&#39;';
+    }
+  });
+}
