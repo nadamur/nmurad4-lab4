@@ -10,6 +10,23 @@ document.addEventListener("DOMContentLoaded", () => {
   //array to store selected results
   const selectedResults = [];
   const selectButton = document.getElementById("listAddButton");
+  //add event listener for FAQ button
+  document.getElementById('FAQ').addEventListener('click', async () => {
+    try {
+      const response = await fetch(`/api/publishers`);
+      if (!response.ok) {
+        throw new Error('Request failed');
+      }
+      const data = await response.json();
+      const uniqueData = new Set(data);
+      const uniqueDataArray = [...uniqueData];
+      const joinedNames = uniqueDataArray.join(', ');
+      alert(joinedNames);
+    } catch (error) {
+      console.error('Error:', error);
+      return null; // Handle the error gracefully
+    }
+  });
   // Add event listeners for sorting buttons
   document.getElementById('sortByName').addEventListener('click', () => {
     searchSuperheroes('name');
@@ -172,7 +189,6 @@ async function deleteLists() {
   const listNames = await getFavoriteListNames();
   if(listNames){
     listNames.listNames.forEach((listName) => {
-      console.log("delete lists: " + listName);
       //new option in drop down list
       const newOption = document.createElement("option");
       newOption.value = `${listName}`;
@@ -192,7 +208,6 @@ async function addLists() {
   const listNames = await getFavoriteListNames();
   if(listNames){
     listNames.listNames.forEach((listName) => {
-      console.log("add lists: " + listName);
       //new option in drop down list
       const newOption = document.createElement("option");
       newOption.value = `${listName}`;
@@ -210,7 +225,6 @@ async function displayFavoriteListsButtons() {
   const listNames = await getFavoriteListNames();
   if(listNames){
     listNames.listNames.forEach((listName) => {
-      console.log("displayFavButtons: " + listName);
       //new button for fav list
       const listButton = document.createElement('button');
       listButton.textContent = listName;
@@ -218,13 +232,61 @@ async function displayFavoriteListsButtons() {
       //send data to search function to display results
       listButton.addEventListener('click', async () => {
         const data = await getFavoriteListIds(listName);
-        displayHeroes(data, sortCriteria = 0);   
+        displayFavoriteHeroNames(listName);
+        //displayHeroes(data, sortCriteria = 0);
       });
       favouriteListsContainer.appendChild(listButton);
     });
   }
   
 }
+
+//function to display hero names in fav list in the right container
+async function displayFavoriteHeroNames(listName) {
+  const addedListsContainter = document.getElementById('addedListsResults');
+  addedListsContainter.innerHTML = ''; // Clear existing content
+  listItems = [];
+  try {
+    const response = await fetch(`/api/lists/info/${listName}`);
+    if (!response.ok) {
+      throw new Error('Request failed');
+    }
+    const data = await response.json();
+    for (const hero of data.heroList) {
+      //create new button for each name
+      const nameButton = document.createElement('button');
+      nameButton.textContent = hero.name;
+      nameButton.classList.add('large-square-button'); // Apply the CSS class
+      addedListsContainter.appendChild(nameButton);
+      //when the name is clicked, the hero's information is displayed in the searchResults div
+      nameButton.addEventListener('click', async () => {
+        const searchResultsDiv = document.getElementById('searchResults');
+        // Clear existing options
+        while (searchResultsDiv.firstChild) {
+        searchResultsDiv.removeChild(searchResultsDiv.firstChild);
+        }
+        const resultList = document.createElement('ul');
+        for (const prop in hero){
+          const listItem = document.createElement('li');
+          if (hero[prop] === null){
+            listItem.appendChild(document.createTextNode(`${prop}: No Powers`));
+            resultList.appendChild(listItem);
+          }else{
+            listItem.appendChild(document.createTextNode(`${prop}: ${hero[prop]}`));
+            resultList.appendChild(listItem);
+          }
+          
+        }
+        searchResultsDiv.appendChild(resultList);
+        
+      });
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    return null; // Handle the error gracefully
+  }
+}
+
 
 //get saved list's ids
 async function getFavoriteListIds(listName) {

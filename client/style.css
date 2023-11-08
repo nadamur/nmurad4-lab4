@@ -32,6 +32,12 @@ body {
 #listDetails {
     margin-top: 20px;
 }
+.large-square-button {
+    width: 150px;
+    height: 150px;
+    font-size: 16px;
+    padding: 10px;
+}
 
 h2 {
     background-color: #007acc;
@@ -75,3 +81,34 @@ button {
   #searchResults ul li.selected {
     background-color: lightblue;
   }
+  #searchAndListsContainer {
+    display: flex; /* Create a flex container to place sections side by side */
+}
+
+#searchResults, #addedListsResults {
+    flex: 1; /* Make both sections grow to fill the available space */
+    margin: 10px; /* Add margin for spacing */
+    padding: 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+#listDetails {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+#sortListTitle {
+    flex: 1;
+    margin-right: 10px;
+}
+
+#favoriteListHeroesTitle {
+    flex: 1;
+    margin-left: 10px;
+}
+
+
+/* new style */

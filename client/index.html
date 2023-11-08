@@ -42,13 +42,11 @@
         </div>
     </div>
 
-    <!-- Display Superheroes in a List -->
-    <div id="listDetails">
+<!-- Display Superheroes in a List -->
+<div id="listDetails">
+    <!-- Modify the "Sort List" title section -->
+    <div id="sortListTitle">
         <h2>Sort List: <span id="listName"></span></h2>
-        <button id="sortByName">Sort by Name</button>
-        <button id="sortByRace">Sort by Race</button>
-        <button id="sortByPublisher">Sort by Publisher</button>
-        <button id="sortByPower">Sort by Power</button>
         <form id="listsForm">
             <label for="listNames">Add Selected Heroes to:</label>
             <select id="listNames">
@@ -57,10 +55,32 @@
         </form>
     </div>
 
-    <!-- Display Search Results -->
-    <div id="searchResults">
-        <!-- Results will be displayed here -->
+    <!-- Add the "Favorite List Heroes" title section -->
+    <div id="favoriteListHeroesTitle">
+        <h2>Favorite List Heroes</h2>
     </div>
+</div>
+<button id="sortByName">Sort by Name</button>
+<button id="sortByRace">Sort by Race</button>
+<button id="sortByPublisher">Sort by Publisher</button>
+<button id="sortByPower">Sort by Power</button>
+
+    <!-- Display Search Results -->
+    <div id="searchAndListsContainer">
+        <!-- Search Results -->
+        <div id="searchResults">
+            <ul> Your Search Results will be displayed here... </ul>
+            <!-- Results will be displayed here -->
+        </div>
+    
+        <!-- Added Lists Results -->
+        <div id="addedListsResults">
+            <ul> Your Heroes will be displayed here... </ul>
+            <!-- Results for added lists will be displayed here -->
+        </div>
+    </div>
+    <label for="FAQ">FAQ: What Publishers are available</label>
+    <button id="FAQ">Available Publishers</button>
 
     <script src="script.js"></script>
 </body>
