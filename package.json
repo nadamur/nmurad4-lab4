@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/nadamur/se3316-nmurad4-lab3#readme",
   "dependencies": {
-    "express": "^4.18.2"
+    "ejs": "^3.1.3",
+    "express": "^4.18.2",
+    "mongoose": "^5.9.23"
   }
 }

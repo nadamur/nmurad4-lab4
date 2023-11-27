@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const app = express();
 const port = 3000;
 const path = require('path');
@@ -9,7 +10,14 @@ const mainDir = path.join(__dirname, '../');
 const clientDir = path.join(__dirname, '../client');
 app.use(express.static(mainDir));
 app.use(express.static(clientDir));
+// database connection
+const dbURI = 'mongodb+srv://nadamurad2003:AUeHvPkfedepWhBQ@cluster0.8dcttlz.mongodb.net/?retryWrites=true&w=majority';
+mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex:true })
+  .then((result) => app.listen(3000))
+  .catch((err) => console.log(err));
 
+
+  
 //required functions
 //function takes a pattern, returns a set number of hero ids that match given pattern
 function getHeroIds(n, pattern, field, res){
@@ -343,6 +351,3 @@ app.get('/', (req, res) => {
     res.sendFile('index.html', { root: clientDir });
 });
 
-app.listen(port, () => {
-    console.log(`Listening on port ${port}`);
-});
