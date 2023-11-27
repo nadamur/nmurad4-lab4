@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const app = express();
 const port = 3000;
 const path = require('path');
@@ -10,14 +11,33 @@ const mainDir = path.join(__dirname, '../');
 const clientDir = path.join(__dirname, '../client');
 app.use(express.static(mainDir));
 app.use(express.static(clientDir));
+app.use(express.json());
+
 // database connection
-const dbURI = 'mongodb+srv://nadamurad2003:AUeHvPkfedepWhBQ@cluster0.8dcttlz.mongodb.net/?retryWrites=true&w=majority';
+const dbURI = 'mongodb+srv://nadamurad2003:AUeHvPkfedepWhBQ@cluster0.8dcttlz.mongodb.net/node-auth';
 mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex:true })
   .then((result) => app.listen(3000))
   .catch((err) => console.log(err));
+//defining user schema
+const userSchema = new mongoose.Schema({
+    username:{
+        type: String,
+        required:true
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true
+    },
+    password: {
+        type: String,
+        required: true,
+    }
+});
+//defining user model
+const User = mongoose.model('user', userSchema);
 
-
-  
 //required functions
 //function takes a pattern, returns a set number of hero ids that match given pattern
 function getHeroIds(n, pattern, field, res){
@@ -52,8 +72,22 @@ function getHeroPower(id){
     return powers;
 }
 
-app.use(express.json());
+//authentication
+//creates new user in database
+app.post('/signup', async (req, res) => {
+    const { username, email, password } = req.body;
+    try {
+      const user = await User.create({ username, email, password });
+      res.status(201).json(user);
+    }
+    catch(err) {
+      console.log(err);
+      res.status(400).send('error, user not created');
+    }
+});
 
+
+//lists and general JS
 //returns all fav list names
 app.get('/api/lists/fav/names', (req, res) => {
     const filePath = '../superhero_lists.json';

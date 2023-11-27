@@ -6,6 +6,11 @@ document.addEventListener("DOMContentLoaded", () => {
   displayFavoriteListsButtons();
   addLists();
   deleteLists();
+
+  //test button
+  document.getElementById('testButton').addEventListener('click', () => {
+    alert("Button clicked!")
+  });
   
   //array to store selected results
   const selectedResults = [];
