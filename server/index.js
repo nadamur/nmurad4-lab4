@@ -1,44 +1,25 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const app = express();
 const port = 3000;
 const path = require('path');
 const fs = require('fs');
+const mongoose = require('mongoose');
 const superheroesInfo = require('../superhero_info.json');
 const superheroesPowers = require('../superhero_powers.json');
 const mainDir = path.join(__dirname, '../');
 const clientDir = path.join(__dirname, '../client');
-const { isEmail } = require('validator');
+const userRoutes = require('./authentication.js');
 app.use(express.static(mainDir));
 app.use(express.static(clientDir));
 app.use(express.json());
+app.use(userRoutes);
 
 // database connection
 const dbURI = 'mongodb+srv://nadamurad2003:AUeHvPkfedepWhBQ@cluster0.8dcttlz.mongodb.net/node-auth';
 mongoose.connect(dbURI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex:true })
   .then((result) => app.listen(3000))
   .catch((err) => console.log(err));
-//defining user schema
-const userSchema = new mongoose.Schema({
-    username:{
-        type: String,
-        required:[true, 'Please enter a username']
-    },
-    email: {
-        type: String,
-        required: [true, 'Please enter an email'],
-        unique: true,
-        lowercase: true,
-        validate: [isEmail, 'Please enter a valid email']
-    },
-    password: {
-        type: String,
-        required: [true, 'Please enter a password'],
-    }
-});
-//defining user model
-const User = mongoose.model('user', userSchema);
 
 //required functions
 //function takes a pattern, returns a set number of hero ids that match given pattern
@@ -73,57 +54,7 @@ function getHeroPower(id){
     const powers = Object.keys(superheroPower).filter(power => superheroPower[power] === 'True');
     return powers;
 }
-//handle errors
-const handleErrors = (err) => {
-    console.log(err.message, err.code);
-    let errors = { username: '', email: '', password: '' };
-    // incorrect email
-    if (err.message === 'incorrect email') {
-      errors.email = 'That email is not registered';
-    }
-    // incorrect password
-    if (err.message === 'incorrect password') {
-      errors.password = 'That password is incorrect';
-    }
-    // duplicate email error
-    if (err.code === 11000) {
-      errors.email = 'that email is already registered';
-      return errors;
-    }
-    // validation errors
-    if (err.message.includes('user validation failed')) {
-        Object.values(err.errors).forEach(({ properties }) => {
-        errors[properties.path] = properties.message;
-        });
-    }
-  return errors;
-}
-//function will fire after a user is saved to database
-userSchema.post('save', function (doc,next) {
 
-    next();
-});
-//function will fire before saving user to database
-userSchema.pre('save', function(next){
-    next();
-});
-
-//authentication
-//creates new user in database
-app.post('/signup', async (req, res) => {
-    const { username, email, password } = req.body;
-    try {
-      const user = await User.create({ username, email, password });
-      res.status(201).json(user);
-    }
-    catch(err) {
-      const errors = handleErrors(err);
-      res.status(400).send('error, user not created');
-    }
-});
-
-
-//lists and general JS
 //returns all fav list names
 app.get('/api/lists/fav/names', (req, res) => {
     const filePath = '../superhero_lists.json';
