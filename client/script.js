@@ -1,54 +1,34 @@
+const searchButton = document.getElementById("searchButton");
+//array to store selected results
+const selectedResults = [];
+const selectButton = document.getElementById("listAddButton");
+
 document.addEventListener("DOMContentLoaded", () => {
   // This function will be called when the DOM is fully loaded
-
-  // Get a reference to the search button
-  const searchButton = document.getElementById("searchButton");
   displayFavoriteListsButtons();
   addLists();
   deleteLists();
-
-  //test button
-  document.getElementById('testButton').addEventListener('click', () => {
-    alert("Button clicked!")
-  });
-  
-  //array to store selected results
-  const selectedResults = [];
-  const selectButton = document.getElementById("listAddButton");
-  //add event listener for FAQ button
-  document.getElementById('FAQ').addEventListener('click', async () => {
+  //authentication -- create new user in database
+  document.getElementById('signUpButton').addEventListener('click', async () => {
+    const username = document.getElementById('usernameInput').value;
+    const email = document.getElementById('emailInput').value;
+    const password = document.getElementById('passwordInput').value;
     try {
-      const response = await fetch(`/api/publishers`);
-      if (!response.ok) {
-        throw new Error('Request failed');
-      }
-      const data = await response.json();
-      const uniqueData = new Set(data);
-      const uniqueDataArray = [...uniqueData];
-      const joinedNames = uniqueDataArray.join(', ');
-      alert(joinedNames);
-    } catch (error) {
-      console.error('Error:', error);
-      return null; // Handle the error gracefully
+      const res = await fetch('/signup', { 
+        method: 'POST', 
+        body: JSON.stringify({ username, email, password }),
+        headers: {'Content-Type': 'application/json'}
+      });
+      document.getElementById('usernameInput').value = '';
+      document.getElementById('emailInput').value = '';
+      document.getElementById('passwordInput').value = '';
+      alert('Account successfully created!')
+    }
+    catch (err) {
+      console.log(err);
     }
   });
-  // Add event listeners for sorting buttons
-  document.getElementById('sortByName').addEventListener('click', () => {
-    searchSuperheroes('name');
-  });
-
-  document.getElementById('sortByRace').addEventListener('click', () => {
-    searchSuperheroes('race');
-  });
-
-  document.getElementById('sortByPublisher').addEventListener('click', () => {
-    searchSuperheroes('publisher');
-  });
-
-  document.getElementById('sortByPower').addEventListener('click', () => {
-    searchSuperheroes('power');
-  });
-
+  
   //selects results
   document.getElementById("searchResults").addEventListener("click", (event) => {
     const listItem = event.target.closest("li");
@@ -67,11 +47,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   });
-  
-
+    
   //adds selected results to list
   selectButton.addEventListener("click", () => {
-    event.preventDefault()
+    preventDefault()
     //current selected list name
     const favList = document.getElementById("listNames");
     const favListOption = favList.options[favList.selectedIndex];
@@ -87,46 +66,85 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Add event listeners for sorting buttons
+  document.getElementById('sortByName').addEventListener('click', () => {
+    searchSuperheroes('name');
+  });
+
+  document.getElementById('sortByRace').addEventListener('click', () => {
+    searchSuperheroes('race');
+  });
+
+  document.getElementById('sortByPublisher').addEventListener('click', () => {
+    searchSuperheroes('publisher');
+  });
+
+  document.getElementById('sortByPower').addEventListener('click', () => {
+    searchSuperheroes('power');
+  });
+
+
   // Add a click event listener to the search button
   searchButton.addEventListener("click", (event) => {
     event.preventDefault(); // Prevent the form from submitting
     searchSuperheroes(criteria = 0); // Call your search function
   });
-});
 
-//adds new list to favourites
-document.getElementById('addListButton').addEventListener('click', async () => {
-  const listName = prompt('Enter the name for the new list:');
-  if (listName) {
-    // Create a new list and add it to the UI
-    //first sanitize the list name
-    if (listName.length < 3 || listName.length > 50) {
-      alert('List name should be between 3 and 50 characters.');
-    } else if (!/^[a-zA-Z0-9\s-]+$/.test(listName)) {
-      alert('List name can only contain letters, numbers, spaces, and hyphens.');
-    } else {
-      // sanitization: Remove any potentially harmful characters or escape them
-      const sanitizedListName = escapeHtml(listName);
-      await createList(sanitizedListName);
+  //add event listener for FAQ button
+  document.getElementById('FAQ').addEventListener('click', async () => {
+    try {
+      const response = await fetch(`/api/publishers`);
+      if (!response.ok) {
+        throw new Error('Request failed');
+      }
+      const data = await response.json();
+      const uniqueData = new Set(data);
+      const uniqueDataArray = [...uniqueData];
+      const joinedNames = uniqueDataArray.join(', ');
+      alert(joinedNames);
+    } catch (error) {
+      console.error('Error:', error);
+      return null; // Handle the error gracefully
+    }
+  });
+
+
+  //adds new list to favourites
+  document.getElementById('addListButton').addEventListener('click', async () => {
+    const listName = prompt('Enter the name for the new list:');
+    if (listName) {
+      // Create a new list and add it to the UI
+      //first sanitize the list name
+      if (listName.length < 3 || listName.length > 50) {
+        alert('List name should be between 3 and 50 characters.');
+      } else if (!/^[a-zA-Z0-9\s-]+$/.test(listName)) {
+        alert('List name can only contain letters, numbers, spaces, and hyphens.');
+      } else {
+        // sanitization: Remove any potentially harmful characters or escape them
+        const sanitizedListName = escapeHtml(listName);
+        await createList(sanitizedListName);
+        displayFavoriteListsButtons();
+        addLists();
+        deleteLists();
+      }
+    }
+  });
+
+  //deletes list to favourites
+  document.getElementById('deleteListButton').addEventListener('click', () => {
+    const listName = document.getElementById("listNamesToDelete").value;
+
+    if (listName) {
+      // Create a new list and add it to the UI
+      deleteList(listName);
+      deleteLists();
       displayFavoriteListsButtons();
       addLists();
-      deleteLists();
     }
-  }
+  });
+
 });
 
-//deletes list to favourites
-document.getElementById('deleteListButton').addEventListener('click', () => {
-  const listName = document.getElementById("listNamesToDelete").value;
-
-  if (listName) {
-    // Create a new list and add it to the UI
-    deleteList(listName);
-    deleteLists();
-    displayFavoriteListsButtons();
-    addLists();
-  }
-});
 
 //adds selected results to list
 async function addSelectedResultsToFavorites(list, ids){
@@ -486,10 +504,6 @@ function sortResults(listItems, criteria) {
     
   });
 }
-
-
-
-
 
 //function to get hero powers based on ID
 async function getPowers(id) {

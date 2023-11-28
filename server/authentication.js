@@ -1,6 +1,7 @@
 const {Router} = require('express');
 const router = Router();
 const User = require("./user.js");
+const jwt = require('jsonwebtoken');
 
 //functions
 //handle errors
@@ -28,6 +29,13 @@ const handleErrors = (err) => {
     }
   return errors;
 }
+const maxAge = 3 * 60 * 60;
+//creates token
+const createToken = (id) =>{
+  return jwt.sign({id}, 'test secret', {
+    expiresIn: maxAge
+  });
+}
 
 //authentication
 //creates new user in database
@@ -35,12 +43,16 @@ router.post('/signup', async (req, res) => {
     const { username, email, password } = req.body;
     try {
       const user = await User.create({ username, email, password });
-      res.status(201).json(user);
+      const token = createToken(user._id);
+      res.cookie('jwt', token, {httpOnly: true, maxAge: maxAge});
+      res.status(201).json({user: user._id});
     }
     catch(err) {
       const errors = handleErrors(err);
       res.status(400).send('error, user not created');
     }
 });
+
+
 
 module.exports = router;

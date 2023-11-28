@@ -10,10 +10,12 @@ const superheroesPowers = require('../superhero_powers.json');
 const mainDir = path.join(__dirname, '../');
 const clientDir = path.join(__dirname, '../client');
 const userRoutes = require('./authentication.js');
+const cookieParser = require('cookie-parser');
 app.use(express.static(mainDir));
 app.use(express.static(clientDir));
 app.use(express.json());
 app.use(userRoutes);
+app.use(cookieParser());
 
 // database connection
 const dbURI = 'mongodb+srv://nadamurad2003:AUeHvPkfedepWhBQ@cluster0.8dcttlz.mongodb.net/node-auth';
@@ -167,7 +169,6 @@ app.get('/api/search/:pattern/:field/:n', (req, res) => {
             res.status(404).json({ error: 'No heroes found for this publisher' });
             return;
             }
-            break;
     }
 });
 
